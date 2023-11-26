@@ -28,6 +28,7 @@ class Renderer:
         for mesh in self.meshes:
                        
             A = mesh.ka * np.array(ambient_light);
+            mesh_pos = mesh.transform.position();
                     
             for t in mesh.faces:
                 
@@ -198,48 +199,48 @@ class Renderer:
                                 p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
                                 N = p_normal / np.linalg.norm(p_normal);
                                 p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
-                                p_to_c = (cam_pos - p_world);
+                                p_to_c = (mesh_pos - p_world);
                                 E = p_to_c / np.linalg.norm(p_to_c);
                                 
-                                reflect = E - 2 * N * np.dot(N, E);
+                                R = E - 2 * N * np.dot(N, E);
+                                R = R / np.linalg.norm(R);
                                 
                                 #Convert reflection ray to uv coordinates.
-                                theta = np.arctan2(reflect[1],reflect[0])
-                                phi   = np.arctan2(reflect[2],np.sqrt(reflect[0]**2 + reflect[1]**2))
+                                rho = np.arctan2(R[1],R[0])
+                                phi   = np.arctan2(R[2],np.sqrt(R[0]**2 + R[1]**2))
                                 
-                                uv = np.array([theta, phi]);
+                                #rho = np.arccos(-R[2]);
+                                #phi = np.arctan2(R[1], R[0]);
+                                
+                                uv = np.array([rho, phi]);
+                                
+                                #print(uv);
+                                #uv[1] += np.pi;
                                 
                                 uv[0] += np.pi
                                 uv[1] += np.pi/2.0
 
-                                uv[0] /= 2.0*np.pi
+                                uv[0] /= (2.0*np.pi)
                                 uv[1] /= np.pi
                                 
+                                #uv[0] /= np.pi;
+                                #uv[1] /= (2*np.pi);
                                 
-                                px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((uv[1] * mesh.texture.height - 0.5)))
+                                if (uv[0] < 0 or uv[1] < 0): print(uv);
+                                
+                                
+                                px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((-uv[1] * mesh.texture.height - 0.5)))
                                 #print(px_coords);
                                 r, g, b = mesh.texture.getpixel(px_coords);
                                 image_buffer[y][x] = np.array([r,g,b]);
                             elif (shading == "spheremap2"):
-                                p_normal = self.camera.project_point(alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal);
-                                N = p_normal / np.linalg.norm(p_normal);
                                 
-                                p_cam = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
-                                p_to_c = (cam_pos - p_cam);
-                                E = p_to_c / np.linalg.norm(p_to_c);
+                                #Calculate the surface and eye normals.
                                 
-                                reflect = E - 2 * N * np.dot(N, E);
-                                reflect  = reflect / np.linalg.norm(reflect);
+                                p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
                                 
-                                p_world = self.camera.inverse_project_point(p_cam);
-                                E_world = (cam_pos - p_world) / np.linalg.norm(cam_pos - p_world);
-                                
-                                sphere_normal = (reflect + E_world)
-                                sphere_normal = sphere_normal / np.linalg.norm(sphere_normal);
-                                
-                                #Convert reflection ray to uv coordinates.
-                                M = 2 * np.sqrt(sphere_normal[0]**2 + sphere_normal[1]**2 + (sphere_normal[2]+1)**2)
-                                uv = np.array([sphere_normal[0] / M + 0.5, sphere_normal[1] / M + 0.5])
+                                #Use the 
+                                mesh_pos
                                 
                                 
                                 px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((uv[1] * mesh.texture.height - 0.5)))
@@ -247,9 +248,13 @@ class Renderer:
                                 r, g, b = mesh.texture.getpixel(px_coords);
                                 image_buffer[y][x] = np.array([r,g,b]);
                             elif (shading == "cubemap"):
+                                
                                 image_buffer[y][x] = np.array([1,1,1]) * depth * 255;
                             else:
                                 image_buffer[y][x] = np.array([1,1,1]) * depth * 255;
-                    
 
         self.screen.draw(image_buffer);
+        
+        #Determine which side of the cube to grab the texture from. 
+        def find_plane(self, v):
+            return;

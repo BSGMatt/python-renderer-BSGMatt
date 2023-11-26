@@ -87,6 +87,12 @@ class Transform:
         p4 = np.append(n, 0);
         apply = np.dot(self.matrix, p4);
         return self.normalize_array(apply[:3]);
+    
+    def apply_inverse_to_normal(self, n):
+        n = self.ensure_numpy_array(n);
+        p4 = np.append(n, 0);
+        apply = np.dot(self.inverse_matrix(), p4);
+        return self.normalize_array(apply[:3]);
 
     #Converts p into a numpy array, if not
     #so already. 

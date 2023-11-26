@@ -17,10 +17,10 @@ if __name__ == '__main__':
 
     mesh = Mesh.from_stl("unit_sphere.stl", np.array([1.0, 0.0, 1.0]),\
         np.array([1.0, 1.0, 1.0]),0.05,1.0,0.5,1000)
-    mesh.transform.set_rotation(15, 0, 90)
+    mesh.transform.set_rotation(0, 0, 0)
     
     mesh.sphere_uvs()
-    mesh.load_texture("test_images/sphere.jpg")
+    mesh.load_texture("test_images/sphere2.png")
 
     light = PointLight(50.0, np.array([1, 1, 1]))
     light.transform.set_position(0, 5, 5)
