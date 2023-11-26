@@ -20,12 +20,12 @@ if __name__ == '__main__':
     mesh.transform.set_rotation(0, 0, 0)
     
     mesh.sphere_uvs()
-    mesh.load_texture("test_images/sphere2.png")
+    mesh.load_texture("test_images/bar.jpg")
 
     light = PointLight(50.0, np.array([1, 1, 1]))
     light.transform.set_position(0, 5, 5)
 
     renderer = Renderer(screen, camera, [mesh], light)
-    renderer.render("spheremap",[80,80,80], [0.2, 0.2, 0.2])
+    renderer.render("spheremap3",[80,80,80], [0.2, 0.2, 0.2])
 
     screen.show()
