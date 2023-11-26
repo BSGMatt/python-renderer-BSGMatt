@@ -13,8 +13,11 @@ class Texture:
     
     #Constructor 
     def __init__(self, tex_mode, *img_paths):
+        print(img_paths);
         for img in img_paths:
-            self.img = Image.open(img_path);
+            i = Image.open(img).convert('RGB');
+            self.images.append(i);
+            
         self.tex_mode = tex_mode;
             
     #Calculates the uv-coordinates and returns a numpy array of the color at that coordinate. 
@@ -27,11 +30,11 @@ class Texture:
             return self.spheremap_uv(tex_args[0], tex_args[1]);
             
         
-        return custom_uv(self, tex_args[0]);
+        return self.custom_uv(0, tex_args[0]);
     
-    def custom_uv(self, UV):
-        px_coords = (round((UV[0] * mesh.texture.width - 0.5)), round((-UV[1] * mesh.texture.height - 0.5)))
-        r, g, b = mesh.texture.getpixel(px_coords);
+    def custom_uv(self, imgIdx, UV):
+        px_coords = (round((UV[0] * self.images[imgIdx].width - 0.5)), round((UV[1] * self.images[imgIdx].height - 0.5)))
+        r, g, b = self.images[imgIdx].getpixel(px_coords);
         return np.array([r,g,b]);
     
     def quad_uv(self, Z, P, alpha, beta, gamma):
@@ -39,12 +42,12 @@ class Texture:
         interp_Z = alpha * Z[0] +  beta * Z[1] +  gamma * Z[2];
         uv_coords = (alpha * P[0] + beta * P[1] + gamma * P[2]) / interp_Z;
                                 
-        return custom_uv(uv_coords);
+        return self.custom_uv(0, uv_coords);
     
     def spheremap_uv(self, N, E):
         
         #Use eye and surface normal to calculate the reflect vector. 
-        R = V - 2 * np.dot(N, V) * N;
+        R = E - 2 * np.dot(N, E) * N;
                                 
         #Taken from this pdf: https://web.cse.ohio-state.edu/~shen.94/781/Site/Slides_files/env.pdf
         #Used to map the reflect vector to a position of a sphere map. 
@@ -52,4 +55,4 @@ class Texture:
         M = 2*np.sqrt(R[0]**2 + (R[1]-1)**2 + R[2]**2) #We use Ry - 1 because our camera looks down -Y
         uv = np.array([R[0] / M + 0.5, R[2] / M + 0.5]);
         
-        return custom_uv(uv);
+        return self.custom_uv(0, uv);

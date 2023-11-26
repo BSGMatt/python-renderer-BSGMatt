@@ -6,7 +6,7 @@ from camera import PerspectiveCamera,OrthoCamera
 from mesh import Mesh
 from renderer import Renderer
 from light import PointLight
-
+from texture import *
 
 
 if __name__ == '__main__':
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     screen = Screen(500,500)
 
     camera = PerspectiveCamera(1.0, -1.0, -1.0, 1.0, -1.0, -10)
-    camera.transform.set_position(0, 2.5, 0)
+    camera.transform.set_position(0, 3.5, 0)
 
 
     mesh = Mesh.from_stl(sys.argv[1], np.array([1.0, 0.0, 1.0]),\
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     mesh.transform.set_rotation(0, 0, 0)
     
     mesh.sphere_uvs()
-    mesh.load_texture(sys.argv[2]);
+    mesh.load_texture(TEX_MODE_SPHEREMAP, sys.argv[2]);
 
     light = PointLight(100.0, np.array([1, 1, 1]))
     light.transform.set_position(0, 5, 5)
@@ -43,6 +43,6 @@ if __name__ == '__main__':
         if (val == 2):
             render_mode = "spheremap-spec"; #Texture + ambient + specular
     
-    renderer.render(render_mode,[80,80,80], [0.5, 0.5, 0.5])
+    renderer.render(render_mode,[80,80,80], [0.5, 0.5, 0.0])
 
     screen.show()

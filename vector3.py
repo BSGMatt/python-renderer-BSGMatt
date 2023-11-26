@@ -21,6 +21,7 @@ class Vector3:
 
     #returns a normalized version of this vector
     def normalized(self):
+        
         mag = self.magnitude();
         return Vector3(self.x / mag, self.y / mag, self.z / mag);
 

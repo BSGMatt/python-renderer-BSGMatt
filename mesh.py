@@ -4,6 +4,7 @@ from pprint import pprint
 from transform import Transform
 from vector3 import *
 from PIL import Image
+from texture import *
 
 class Mesh:
 
@@ -42,12 +43,7 @@ class Mesh:
         verts = [];
         faces = [];
 
-        verts.append(Vertex(0, points[0][0], points[0][1], points[0][2]));
-        verts.append(Vertex(1, points[0][3], points[0][4], points[0][5]));
-        verts.append(Vertex(2, points[0][6], points[0][7], points[0][8]));
-        faces.append(Triangle(0, 1, 2));
-
-        for i in range(1, len(points)):
+        for i in range(0, len(points)):
             tri = []; #temp list to store vertex indices that will make a triangle. 
             for j in range(0, len(points[i]), 3):
                 unique = True;
@@ -64,8 +60,18 @@ class Mesh:
             faces.append(Triangle(tri[0], tri[1], tri[2]));
         
         normals = [];
-        for i in range(0, len(numpyMesh.normals)):
-            normals.append(Vector3.from_list(numpyMesh.normals[i]).normalized());
+        
+        for t in faces:
+            a = verts[t.a].as_array();
+            b = verts[t.b].as_array();
+            c = verts[t.c].as_array();
+            n = numpy.cross(b - a, c - a)
+            norm = n / np.linalg.norm(n);
+            normals.append(Vector3.from_list([norm[0],norm[1],norm[2]]));
+        
+        #for i in range(0, len(numpyMesh.normals)):
+            #print(numpyMesh.normals[i]);
+            #normals.append(Vector3.from_list(numpyMesh.normals[i]).normalized());
             
         #Calculate the vertex normals
         for i in range(0, len(faces)):
@@ -89,11 +95,8 @@ class Mesh:
 
         return ret;
     
-    def load_texture(self, img_path, tex_mode = -1):
-        
-        tex = Image.open(img_path);
-        self.texture = tex.convert('RGB');
-        
+    def load_texture(self, tex_mode = -1, *img_path):
+        self.texture = Texture(tex_mode, *img_path);
         return;
     
     #z is 'up', theta is azimith angle, phi is elevation
@@ -156,8 +159,11 @@ class Mesh:
             #Grab the vertices position. 
             
             a = mesh.verts[t.a].as_array();
+            #print(f"A: {a}");
             b = mesh.verts[t.b].as_array();
+            #print(f"A: {b}");
             c = mesh.verts[t.c].as_array();
+            #print(f"A: {c}");
             n = numpy.cross(b - a, c - a)
 
             normals.append(Vector3.from_list(n / numpy.linalg.norm(n)));
