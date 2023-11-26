@@ -197,25 +197,93 @@ class Renderer:
                                 image_buffer[y][x] = np.array([r,g,b]);
                             elif (shading == "spheremap"):
                                 
-                                #Calculate 
+                                #Calculate the interpolated surface normal and eye vectors and normalize them.
                                 p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
                                 N = p_normal / np.linalg.norm(p_normal);
                                 p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
                                 p_to_c = (cam_pos - p_world);
                                 E = p_to_c / np.linalg.norm(p_to_c);
                                 
-                                R = E - 2 * np.dot(N, E) * N;
-                                #R /= np.linalg.norm(R);
                                 
-                                M = 2*np.sqrt(R[0]**2 + (R[1]-1)**2 + R[2]**2)
+                                #Use eye and surface normal to calculate the reflect vector. 
+                                R = E - 2 * np.dot(N, E) * N;
+                                
+                                #Taken from this pdf: https://web.cse.ohio-state.edu/~shen.94/781/Site/Slides_files/env.pdf
+                                #Used to map the reflect vector to a position of a sphere map. 
+                                #This version is slightly modified to account for our render's coordinate system. (Z is up, Camera looks down negative Y) 
+                                M = 2*np.sqrt(R[0]**2 + (R[1]-1)**2 + R[2]**2) #We use Ry - 1 because our camera looks down -Y
                                 uv = np.array([R[0] / M + 0.5, R[2] / M + 0.5]);
                                 
-                                #print(N);
+                                
                                 px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((uv[1] * mesh.texture.height - 0.5)))
-                                #print(px_coords);
                                 r, g, b = mesh.texture.getpixel(px_coords);
                                 image_buffer[y][x] = np.array([r,g,b]);
+                            elif (shading == "spheremap-spec-diff"):
                                 
+                                #Calculate the interpolated surface normal and eye vectors and normalize them.
+                                p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
+                                N = p_normal / np.linalg.norm(p_normal);
+                                p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
+                                p_to_c = (cam_pos - p_world);
+                                p_to_l = (light_pos - p_world);
+                                L = p_to_l / np.linalg.norm(p_to_l);
+                                V = p_to_c / np.linalg.norm(p_to_c);
+                                H = (L + V) / np.linalg.norm(L + V);
+                                spec = mesh.ks * (max(0, np.dot(H, N)) ** mesh.ke) * mesh.specular_color;
+                                
+                                
+                                #Use eye and surface normal to calculate the reflect vector. 
+                                R = V - 2 * np.dot(N, V) * N;
+                                
+                                #Taken from this pdf: https://web.cse.ohio-state.edu/~shen.94/781/Site/Slides_files/env.pdf
+                                #Used to map the reflect vector to a position of a sphere map. 
+                                #This version is slightly modified to account for our render's coordinate system. (Z is up, Camera looks down negative Y) 
+                                M = 2*np.sqrt(R[0]**2 + (R[1]-1)**2 + R[2]**2) #We use Ry - 1 because our camera looks down -Y
+                                uv = np.array([R[0] / M + 0.5, R[2] / M + 0.5]);
+                                
+                                
+                                px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((uv[1] * mesh.texture.height - 0.5)))
+                                r, g, b = mesh.texture.getpixel(px_coords);
+                                diffuse_color = np.array([r,g,b]) / 255;
+                                
+                                I_d = (np.array(self.light.color) * self.light.intensity) / (np.linalg.norm(p_to_l) ** 2)
+                                phi_d = (mesh.kd * diffuse_color * max(0, np.dot(L, N))) / np.pi;
+                                diff = I_d * phi_d;
+                                
+                                final_color = np.array([min(255, (diff[0] + A[0] + spec[0]) * 255), min(255, (diff[1] + A[1] + spec[1]) * 255), min(255, (diff[2] + A[2] + spec[2]) * 255)])
+                                
+                                image_buffer[y][x] = final_color; 
+                            elif (shading == "spheremap-spec"):
+                                
+                                #Calculate the interpolated surface normal and eye vectors and normalize them.
+                                p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
+                                N = p_normal / np.linalg.norm(p_normal);
+                                p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
+                                p_to_c = (cam_pos - p_world);
+                                p_to_l = (light_pos - p_world);
+                                L = p_to_l / np.linalg.norm(p_to_l);
+                                V = p_to_c / np.linalg.norm(p_to_c);
+                                H = (L + V) / np.linalg.norm(L + V);
+                                spec = mesh.ks * (max(0, np.dot(H, N)) ** mesh.ke) * mesh.specular_color;
+                                
+                                
+                                #Use eye and surface normal to calculate the reflect vector. 
+                                R = V - 2 * np.dot(N, V) * N;
+                                
+                                #Taken from this pdf: https://web.cse.ohio-state.edu/~shen.94/781/Site/Slides_files/env.pdf
+                                #Used to map the reflect vector to a position of a sphere map. 
+                                #This version is slightly modified to account for our render's coordinate system. (Z is up, Camera looks down negative Y) 
+                                M = 2*np.sqrt(R[0]**2 + (R[1]-1)**2 + R[2]**2) #We use Ry - 1 because our camera looks down -Y
+                                uv = np.array([R[0] / M + 0.5, R[2] / M + 0.5]);
+                                
+                                
+                                px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((uv[1] * mesh.texture.height - 0.5)))
+                                r, g, b = mesh.texture.getpixel(px_coords);
+                                diff = np.array([r,g,b]) / 255;
+                                
+                                final_color = np.array([min(255, (diff[0] + A[0] + spec[0]) * 255), min(255, (diff[1] + A[1] + spec[1]) * 255), min(255, (diff[2] + A[2] + spec[2]) * 255)])
+                                
+                                image_buffer[y][x] = final_color;
                             elif (shading == "cubemap"):
                                 
                                 image_buffer[y][x] = np.array([1,1,1]) * depth * 255;
