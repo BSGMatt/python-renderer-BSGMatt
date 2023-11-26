@@ -17,6 +17,7 @@ class Mesh:
         self.maxBounds = None;
         self.transform = Transform();
         
+        
         #Define material
         self.diffuse_color = diffuse_color;
         self.specular_color = specular_color;
@@ -88,7 +89,7 @@ class Mesh:
 
         return ret;
     
-    def load_texture(self, img_path):
+    def load_texture(self, img_path, tex_mode = -1):
         
         tex = Image.open(img_path);
         self.texture = tex.convert('RGB');
