@@ -196,61 +196,6 @@ class Renderer:
                                 r, g, b = mesh.texture.getpixel(px_coords);
                                 image_buffer[y][x] = np.array([r,g,b]);
                             elif (shading == "spheremap"):
-                                p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
-                                N = p_normal / np.linalg.norm(p_normal);
-                                p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
-                                p_to_c = (mesh_pos - p_world);
-                                E = p_to_c / np.linalg.norm(p_to_c);
-                                
-                                R = E - 2 * N * np.dot(N, E);
-                                R = R / np.linalg.norm(R);
-                                R = N;
-                                
-                                #Convert reflection ray to uv coordinates.
-                                rho = np.arctan2(R[1],R[0])
-                                phi   = np.arctan2(R[2],np.sqrt(R[0]**2 + R[1]**2))
-                                
-                                #rho = np.arccos(-R[2]);
-                                #phi = np.arctan2(R[1], R[0]);
-                                
-                                uv = np.array([rho, phi]);
-                                
-                                #print(uv);
-                                #uv[1] += np.pi;
-                                
-                                uv[0] += np.pi
-                                uv[1] += np.pi/2.0
-
-                                uv[0] /= (2.0*np.pi)
-                                uv[1] /= np.pi
-                                
-                                #uv[0] /= np.pi;
-                                #uv[1] /= (2*np.pi);
-                                
-                                #uv[1] += 0.5;
-                                
-                                if (uv[0] < 0 or uv[1] < 0): print(uv);
-                                
-                                
-                                px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((-uv[1] * mesh.texture.height - 0.5)))
-                                #print(px_coords);
-                                r, g, b = mesh.texture.getpixel(px_coords);
-                                image_buffer[y][x] = np.array([r,g,b]);
-                            elif (shading == "spheremap2"):
-                                
-                                #Calculate 
-                                p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
-                                N = p_normal / np.linalg.norm(p_normal);
-                                
-                                
-                                #print(N);
-                                uv = np.array([np.arcsin(N[0]) / np.pi + 0.5, np.arcsin(N[1]) / np.pi + 0.5])
-                                px_coords = (round((uv[0] * mesh.texture.width - 0.5)), round((-uv[1] * mesh.texture.height - 0.5)))
-                                #print(px_coords);
-                                r, g, b = mesh.texture.getpixel(px_coords);
-                                image_buffer[y][x] = np.array([r,g,b]);
-                                
-                            elif (shading == "spheremap3"):
                                 
                                 #Calculate 
                                 p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
