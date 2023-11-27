@@ -96,7 +96,10 @@ class Mesh:
         return ret;
     
     def load_texture(self, tex_mode = -1, *img_path):
-        self.texture = Texture(tex_mode, *img_path);
+        if (tex_mode == TEX_MODE_CUBEMAP):
+            self.texture = Texture.create_cubemap(img_path[0]);
+        else:
+            self.texture = Texture(tex_mode, *img_path);
         return;
     
     #z is 'up', theta is azimith angle, phi is elevation

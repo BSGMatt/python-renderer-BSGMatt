@@ -35,6 +35,7 @@ class Screen:
         buffer = np.fliplr(buffer);
         buffer = np.rot90(buffer);
         
+        print(type(buffer[0][0]));
 
         pg.pixelcopy.array_to_surface(self.window, buffer);
 
