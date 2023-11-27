@@ -4,7 +4,8 @@ import numpy as np
 TEX_MODE_CUSTOM = -1
 TEX_MODE_QUAD = 0
 TEX_MODE_SPHEREMAP = 1
-TEX_MODE_CUBEMAP = 2
+TEX_MODE_CUBEMAP_REFLECT = 2
+TEX_MODE_CUBEMAP_DIRECT = 3
 
 CUBEMAP_NEG_Z = 0
 CUBEMAP_POS_Z = 1
@@ -35,8 +36,10 @@ class Texture:
             return self.quad_uv(tex_args[0], tex_args[1], tex_args[2], tex_args[3], tex_args[4]);
         if (self.tex_mode == TEX_MODE_SPHEREMAP):
             return self.spheremap_uv(tex_args[0], tex_args[1]);
-        if (self.tex_mode == TEX_MODE_CUBEMAP):
-            return self.cubemap_uv(tex_args[0], tex_args[1]);
+        if (self.tex_mode == TEX_MODE_CUBEMAP_REFLECT):
+            return self.cubemap_reflect_uv(tex_args[0], tex_args[1]);
+        if (self.tex_mode == TEX_MODE_CUBEMAP_DIRECT):
+            return self.cubemap_direct_uv(tex_args[0]);
             
         
         return self.custom_uv(0, tex_args[0]);
@@ -66,66 +69,117 @@ class Texture:
         
         return self.custom_uv(0, uv);
     
-    def cubemap_uv(self, N, E):
+    def cubemap_reflect_uv(self, N, E):
         
         #Use eye and surface normal to calculate the reflect vector. 
         R = E - 2 * np.dot(N, E) * N;
-        print(f"R: {R}");
+        #print(f"R: {R}");
         
         #Find the largest component of R
         max_comp = 0;
         if (abs(R[1]) > abs(R[max_comp])): max_comp = 1;
         if (abs(R[2]) > abs(R[max_comp])): max_comp = 2;
         
-        print(f"max_comp: {R[max_comp]}");
+        #print(f"max_comp: {R[max_comp]}");
         
         img_index = CUBEMAP_POS_Z;
         new_R = R / abs(R[max_comp]);
         
-        print(f"New R: {new_R}");
+        #print(f"New R: {new_R}");
         uv = [];
         
         #X faces
         if (max_comp == 0):
             if (R[0] < 0):
-                print("R faces -X plane");
+                #print("R faces -X plane");
                 img_index = CUBEMAP_NEG_X;
                 uv = np.array([new_R[1], new_R[2]]);
             else:
-                print("R faces +X plane");
+                #print("R faces +X plane");
                 img_index = CUBEMAP_POS_X;
                 uv = np.array([-new_R[1], new_R[2]]);
         elif (max_comp == 1):
             if (R[1] < 0):
-                print("R faces -Y plane");
+                #print("R faces -Y plane");
                 img_index = CUBEMAP_POS_Y;
                 uv = np.array([-new_R[0], new_R[2]]);
             else:
-                print("R faces +Y plane");
+                #print("R faces +Y plane");
                 img_index = CUBEMAP_NEG_Y;
                 uv = np.array([new_R[0], new_R[2]]);
         else:
             if (R[2] < 0):
-                print("R faces -Z plane");
+                #print("R faces -Z plane");
                 img_index = CUBEMAP_NEG_Z;
                 uv = np.array([new_R[0], new_R[1]]);
             else:
-                print("R faces +Z plane");
+                #print("R faces +Z plane");
                 img_index = CUBEMAP_POS_Z;
                 uv = np.array([new_R[0], -new_R[1]]);
                 
         uv[0] = uv[0]/2 + 0.5;
         uv[1] = -(uv[1]/2 + 0.5);
         
-        print(f"Image Index, UV: {img_index}, {uv}");
+        #print(f"Image Index, UV: {img_index}, {uv}");
+            
+        return self.custom_uv(img_index, uv);
+    
+    def cubemap_direct_uv(self, N):
+        
+        #print(f"N: {N}");
+        
+        #Find the largest component of N
+        max_comp = 0;
+        if (abs(N[1]) > abs(N[max_comp])): max_comp = 1;
+        if (abs(N[2]) > abs(N[max_comp])): max_comp = 2;
+        
+        #print(f"max_comp: {R[max_comp]}");
+        
+        img_index = CUBEMAP_POS_Z;
+        N = N / abs(N[max_comp]);
+        
+        #print(f"New N: {N}");
+        
+        if (max_comp == 0):
+            if (N[0] < 0):
+                #print("R faces -X plane");
+                img_index = CUBEMAP_POS_X;
+                uv = np.array([N[1], N[2]]);
+            else:
+                #print("R faces +X plane");
+                img_index = CUBEMAP_NEG_X;
+                uv = np.array([-N[1], N[2]]);
+        elif (max_comp == 1):
+            if (N[1] < 0):
+                #print("R faces -Y plane");
+                img_index = CUBEMAP_POS_Y;
+                uv = np.array([-N[0], N[2]]);
+            else:
+                #print("R faces +Y plane");
+                img_index = CUBEMAP_NEG_Y;
+                uv = np.array([N[0], N[2]]);
+        else:
+            if (N[2] < 0):
+                #print("R faces -Z plane");
+                img_index = CUBEMAP_POS_Z;
+                uv = np.array([N[0], N[1]]);
+            else:
+                #print("R faces +Z plane");
+                img_index = CUBEMAP_NEG_Z;
+                uv = np.array([N[0], -N[1]]);
+                
+        uv[0] = -(uv[0]/2 + 0.5);
+        uv[1] = (uv[1]/2 + 0.5);
+        
+        #print(f"Image Index, UV: {img_index}, {uv}");
             
         return self.custom_uv(img_index, uv);
     
     #Creates a Texture object containing the spliced images from the original cubemap texture.
     @staticmethod
-    def create_cubemap(map_path):
+    def create_cubemap(map_path, tex_mode):
         
-        ret = Texture(TEX_MODE_CUBEMAP);
+        ret = Texture(tex_mode);
         
         #Assume the cubemap is in the 'sideways cross format'
         cubemap = Image.open(map_path).convert('RGB');

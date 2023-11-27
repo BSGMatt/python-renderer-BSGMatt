@@ -3,6 +3,7 @@ from mesh import Mesh
 from camera import Camera
 from light import PointLight
 import numpy as np;
+from texture import *
 
 class Renderer:
 
@@ -46,12 +47,14 @@ class Renderer:
                 
                 #Used for gourad shading:
                 vert_intensities = [];
-                if (shading == "gouraud"):
+                vert_positions = []
+                if (shading == "gouraud" or shading == "cubemap-direct"):
                     #Calculate the intensities at each vertex. 
                     k = 0;
                     for v_id in t.as_list():
                         
                         v = mesh.transform.apply_to_point(mesh.verts[v_id]);
+                        vert_positions.append(v);
                         
                         vL = (light_pos - v) / np.linalg.norm(light_pos - v);
                         V = (cam_pos - v) / np.linalg.norm(cam_pos - v);
@@ -243,20 +246,20 @@ class Renderer:
                                 p_to_c = (cam_pos - p_world);
                                 E = p_to_c / np.linalg.norm(p_to_c);
                                 
+                                #Calculate sphere_normal
+                                S = alpha * mesh.verts[t.a].as_array() + beta * mesh.verts[t.b].as_array() + gamma * mesh.verts[t.c].as_array();
+                                S = S / np.linalg.norm(S);
                                 
+                                if (mesh.texture.tex_mode == TEX_MODE_CUBEMAP_REFLECT):
+                                    image_buffer[y][x] = mesh.texture.get_color(N, E);
+                                else:
+                                    image_buffer[y][x] = mesh.texture.get_color(S);
+                            elif (shading == "cubemap-direct"):
                                 
-                                image_buffer[y][x] = mesh.texture.get_color(N, E);
-                            
-                            elif (shading == "cubemap-flat"):
-                                
-                                p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
-                                N = p_normal / np.linalg.norm(p_normal);
-                                p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
-                                #print(p_world);
-                                p_to_c = (cam_pos - p_world);
-                                E = p_to_c / np.linalg.norm(p_to_c);
-                                
-                                image_buffer[y][x] = mesh.texture.get_color(normal, E);
+                                #convert cartesian to spherical
+                                N = alpha * mesh.verts[t.a].as_array() + beta * mesh.verts[t.b].as_array() + gamma * mesh.verts[t.c].as_array();
+                                N = N / np.linalg.norm(N);
+                                image_buffer[y][x] = mesh.texture.get_color(N);
                             
                             else:
                                 image_buffer[y][x] = np.array([1,1,1]) * depth * 255;

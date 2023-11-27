@@ -96,8 +96,8 @@ class Mesh:
         return ret;
     
     def load_texture(self, tex_mode = -1, *img_path):
-        if (tex_mode == TEX_MODE_CUBEMAP):
-            self.texture = Texture.create_cubemap(img_path[0]);
+        if (tex_mode == TEX_MODE_CUBEMAP_REFLECT or tex_mode == TEX_MODE_CUBEMAP_DIRECT):
+            self.texture = Texture.create_cubemap(img_path[0], tex_mode);
         else:
             self.texture = Texture(tex_mode, *img_path);
         return;
