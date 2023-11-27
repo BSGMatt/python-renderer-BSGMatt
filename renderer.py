@@ -243,7 +243,21 @@ class Renderer:
                                 p_to_c = (cam_pos - p_world);
                                 E = p_to_c / np.linalg.norm(p_to_c);
                                 
+                                
+                                
                                 image_buffer[y][x] = mesh.texture.get_color(N, E);
+                            
+                            elif (shading == "cubemap-flat"):
+                                
+                                p_normal = alpha * vertA_normal + beta * vertB_normal + gamma * vertC_normal;
+                                N = p_normal / np.linalg.norm(p_normal);
+                                p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
+                                #print(p_world);
+                                p_to_c = (cam_pos - p_world);
+                                E = p_to_c / np.linalg.norm(p_to_c);
+                                
+                                image_buffer[y][x] = mesh.texture.get_color(normal, E);
+                            
                             else:
                                 image_buffer[y][x] = np.array([1,1,1]) * depth * 255;
 

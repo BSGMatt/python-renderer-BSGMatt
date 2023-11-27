@@ -70,7 +70,6 @@ class Texture:
         
         #Use eye and surface normal to calculate the reflect vector. 
         R = E - 2 * np.dot(N, E) * N;
-        
         print(f"R: {R}");
         
         #Find the largest component of R
