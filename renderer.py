@@ -211,7 +211,10 @@ class Renderer:
                                 H = (L + V) / np.linalg.norm(L + V);
                                 spec = mesh.ks * (max(0, np.dot(H, N)) ** mesh.ke) * mesh.specular_color;
                                 
-                                diffuse_color = mesh.texture.get_color(N, V) / 255;
+                                texture_color = mesh.texture.get_color(N, V) / 255;
+                                
+                                #diffuse_color = self.overlay_color(mesh.diffuse_color, texture_color);
+                                diffuse_color = texture_color * mesh.diffuse_color;
                                 
                                 I_d = (np.array(self.light.color) * self.light.intensity) / (np.linalg.norm(p_to_l) ** 2)
                                 phi_d = (mesh.kd * diffuse_color * max(0, np.dot(L, N))) / np.pi;
@@ -244,28 +247,48 @@ class Renderer:
                                 N = p_normal / np.linalg.norm(p_normal);
                                 p_world = self.camera.inverse_project_point(alpha * verts_device_coords[0] + beta * verts_device_coords[1] + gamma * verts_device_coords[2]);
                                 p_to_c = (cam_pos - p_world);
-                                E = p_to_c / np.linalg.norm(p_to_c);
-                                
-                                #Calculate sphere_normal
-                                S = alpha * mesh.verts[t.a].as_array() + beta * mesh.verts[t.b].as_array() + gamma * mesh.verts[t.c].as_array();
-                                S = S / np.linalg.norm(S);
+                                p_to_l = (light_pos - p_world);
+                                L = p_to_l / np.linalg.norm(p_to_l);
+                                V = p_to_c / np.linalg.norm(p_to_c);
+                                H = (L + V) / np.linalg.norm(L + V);
+                                spec = mesh.ks * (max(0, np.dot(H, N)) ** mesh.ke) * mesh.specular_color;
                                 
                                 if (mesh.texture.tex_mode == TEX_MODE_CUBEMAP_REFLECT):
-                                    image_buffer[y][x] = mesh.texture.get_color(N, E);
+                                    texture_color = mesh.texture.get_color(N, V) / 255;
                                 else:
-                                    image_buffer[y][x] = mesh.texture.get_color(S);
-                            elif (shading == "cubemap-direct"):
+                                    #Calculate sphere_normal
+                                    S = alpha * mesh.verts[t.a].as_array() + beta * mesh.verts[t.b].as_array() + gamma * mesh.verts[t.c].as_array();
+                                    S = S / np.linalg.norm(S);
+                                    texture_color = mesh.texture.get_color(S) / 255;
                                 
-                                #convert cartesian to spherical
-                                N = alpha * mesh.verts[t.a].as_array() + beta * mesh.verts[t.b].as_array() + gamma * mesh.verts[t.c].as_array();
-                                N = N / np.linalg.norm(N);
-                                image_buffer[y][x] = mesh.texture.get_color(N);
-                            
+                                #diffuse_color = self.overlay_color(mesh.diffuse_color, texture_color);
+                                diffuse_color = texture_color * mesh.diffuse_color;
+                                
+                                I_d = (np.array(self.light.color) * self.light.intensity) / (np.linalg.norm(p_to_l) ** 2)
+                                phi_d = (mesh.kd * diffuse_color * max(0, np.dot(L, N))) / np.pi;
+                                diff = I_d * phi_d;
+                                
+                                final_color = np.array([min(255, (diff[0] + A[0] + spec[0]) * 255), min(255, (diff[1] + A[1] + spec[1]) * 255), min(255, (diff[2] + A[2] + spec[2]) * 255)])
+                                         
+                                image_buffer[y][x] = final_color;
                             else:
                                 image_buffer[y][x] = np.array([1,1,1]) * depth * 255;
 
         self.screen.draw(image_buffer);
         
-        #Determine which side of the cube to grab the texture from. 
-        def find_plane(self, v):
-            return;
+    #Blends to color values together. 
+    def overlay_color(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
+            
+        print(f"{a}\n");
+        print(f"{b}\n");
+            
+        ret = [];
+            
+        for i in range(3):
+            if (a[i] < 0.5):
+                ret.append(2 * a[i] * b[i]);
+            else:
+                ret.append(1 - 2*(1 - a[i])*(1 - b[i]));
+            print(ret);
+            
+        return np.array(ret);

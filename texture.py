@@ -60,6 +60,8 @@ class Texture:
         
         #Use eye and surface normal to calculate the reflect vector. 
         R = E - 2 * np.dot(N, E) * N;
+        
+        #print(R);
                                 
         #Taken from this pdf: https://web.cse.ohio-state.edu/~shen.94/781/Site/Slides_files/env.pdf
         #Used to map the reflect vector to a position of a sphere map. 

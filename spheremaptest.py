@@ -22,8 +22,8 @@ if __name__ == '__main__':
     camera.transform.set_position(0, 2.5, 0)
 
 
-    mesh = Mesh.from_stl(sys.argv[1], np.array([1.0, 0.0, 1.0]),\
-        np.array([1.0, 1.0, 1.0]),0.05,1.0,1.0,10)
+    mesh = Mesh.from_stl(sys.argv[1], np.array([1.0, 1.0, 1.0]),\
+        np.array([1.0, 1.0, 1.0]),0.2,1.0,1.0,10)
     mesh.transform.set_rotation(0, 45, 0)
     
     mesh.sphere_uvs()
@@ -43,6 +43,6 @@ if __name__ == '__main__':
         if (val == 2):
             render_mode = "spheremap-spec"; #Texture + ambient + specular
     
-    renderer.render(render_mode,[80,80,80], [0.5, 0.5, 0.0])
+    renderer.render(render_mode,[80,80,80], [0.5, 0.5, 0.5])
 
     screen.show()

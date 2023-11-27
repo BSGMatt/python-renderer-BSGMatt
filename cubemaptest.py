@@ -23,8 +23,8 @@ if __name__ == '__main__':
     camera.transform.set_position(0, 2.5, 0)
 
 
-    mesh = Mesh.from_stl(sys.argv[1], np.array([1.0, 0.0, 1.0]),\
-        np.array([1.0, 1.0, 1.0]),0.05,1.0,1.0,10)
+    mesh = Mesh.from_stl(sys.argv[1], np.array([0.8, 0.8, 0.8]),\
+        np.array([1.0, 1.0, 1.0]),0.2,1.0,1.0,100)
     mesh.transform.set_rotation(0, 0, 0)
     
     mesh.sphere_uvs()
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     
     renderer = Renderer(screen, camera, [mesh], light)
     
-    renderer.render("cubemap",[80,80,80], [0.5, 0.5, 0.0])
+    renderer.render("cubemap",[80,80,80], [0.5, 0.5, 0.5])
 
     screen.show()
     
