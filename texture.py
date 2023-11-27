@@ -6,12 +6,12 @@ TEX_MODE_QUAD = 0
 TEX_MODE_SPHEREMAP = 1
 TEX_MODE_CUBEMAP = 2
 
-CUBEMAP_POS_Z = 0
-CUBEMAP_NEG_Z = 1
-CUBEMAP_POS_X = 2
-CUBEMAP_NEG_X = 3
-CUBEMAP_POS_Y = 4
-CUBEMAP_NEG_Y = 5
+CUBEMAP_NEG_Z = 0
+CUBEMAP_POS_Z = 1
+CUBEMAP_NEG_X = 2
+CUBEMAP_POS_X = 3
+CUBEMAP_NEG_Y = 4
+CUBEMAP_POS_Y = 5
 
 #Class for handling loading and accessing texture images
 class Texture:
@@ -71,44 +71,56 @@ class Texture:
         #Use eye and surface normal to calculate the reflect vector. 
         R = E - 2 * np.dot(N, E) * N;
         
-        #print(f"R: {R}");
+        print(f"R: {R}");
         
         #Find the largest component of R
         max_comp = 0;
         if (abs(R[1]) > abs(R[max_comp])): max_comp = 1;
         if (abs(R[2]) > abs(R[max_comp])): max_comp = 2;
         
-        img_index = 0;
+        print(f"max_comp: {R[max_comp]}");
+        
+        img_index = CUBEMAP_POS_Z;
         new_R = R / abs(R[max_comp]);
         
-        #print(f"R: {new_R}");
+        print(f"New R: {new_R}");
+        uv = [];
         
         #X faces
         if (max_comp == 0):
-            if (np.sign(new_R[0]) < 0):
-                img_index = 1;
-                uv = np.array([-new_R[1]/2 + 0.5, new_R[2]/2 + 0.5]);
+            if (R[0] < 0):
+                print("R faces -X plane");
+                img_index = CUBEMAP_NEG_X;
+                uv = np.array([new_R[1], new_R[2]]);
             else:
-                img_index = 0;
-                uv = np.array([new_R[1]/2 + 0.5, new_R[2]/2 + 0.5]);
-        if (max_comp == 1):
-            if (np.sign(R[1]) < 0):
-                img_index = 3;
-                uv = np.array([-new_R[0]/2 + 0.5, new_R[2]/2 + 0.5]);
+                print("R faces +X plane");
+                img_index = CUBEMAP_POS_X;
+                uv = np.array([-new_R[1], new_R[2]]);
+        elif (max_comp == 1):
+            if (R[1] < 0):
+                print("R faces -Y plane");
+                img_index = CUBEMAP_POS_Y;
+                uv = np.array([-new_R[0], new_R[2]]);
             else:
-                img_index = 2;
-                uv = np.array([new_R[0]/2 + 0.5, new_R[2]/2 + 0.5]);
+                print("R faces +Y plane");
+                img_index = CUBEMAP_NEG_Y;
+                uv = np.array([new_R[0], new_R[2]]);
         else:
-            if (np.sign(R[2]) < 0):
-                img_index = 5;
-                uv = np.array([new_R[0]/2 + 0.5, -new_R[1]/2 + 0.5]) * 0.5;
+            if (R[2] < 0):
+                print("R faces -Z plane");
+                img_index = CUBEMAP_NEG_Z;
+                uv = np.array([new_R[0], new_R[1]]);
             else:
-                img_index = 4;
-                uv = np.array([new_R[0]/2 + 0.5, new_R[1]/2 + 0.5]) * 0.5;
+                print("R faces +Z plane");
+                img_index = CUBEMAP_POS_Z;
+                uv = np.array([new_R[0], -new_R[1]]);
+                
+        uv[0] = uv[0]/2 + 0.5;
+        uv[1] = -(uv[1]/2 + 0.5);
+        
+        print(f"Image Index, UV: {img_index}, {uv}");
             
         return self.custom_uv(img_index, uv);
-        
-        
     
     #Creates a Texture object containing the spliced images from the original cubemap texture.
     @staticmethod
@@ -129,6 +141,24 @@ class Texture:
         cb_sector_h = cubemap.height // 3;
         
         cb_images = [];
+        
+        #Extract +Z (top face)
+        z_face = np.empty((cb_sector_h, cb_sector_w, 3), dtype=np.uint8);
+        for y in range(2 * (cb_sector_h), 3 * (cb_sector_h)):
+            for x in range(1 * (cb_sector_w), 2 * (cb_sector_w)):
+                #print(cmap_array[y][x]);
+                z_face[y % (cb_sector_h)][x % (cb_sector_w)] = cmap_array[y][x];
+                
+        cb_images.append(Image.fromarray(z_face, mode='RGB'));
+                
+        #Extract -Z (bottom face)
+        z_face = np.empty((cb_sector_h, cb_sector_w, 3), dtype=np.uint8);
+        for y in range(0, 1 * (cb_sector_h)):
+            for x in range(1 * (cb_sector_w), 2 * (cb_sector_w)):
+                #print(cmap_array[y][x]);
+                z_face[y % (cb_sector_h)][x % (cb_sector_w)] = cmap_array[y][x];
+        
+        cb_images.append(Image.fromarray(z_face, mode='RGB'));
         
         #Extract +X (left face)
         z_face = np.empty((cb_sector_h, cb_sector_w, 3), dtype=np.uint8);
@@ -161,24 +191,6 @@ class Texture:
         z_face = np.empty((cb_sector_h, cb_sector_w, 3), dtype=np.uint8);
         for y in range(1 * (cb_sector_h), 2 * (cb_sector_h)):
             for x in range(3 * (cb_sector_w), 4 * (cb_sector_w)):
-                #print(cmap_array[y][x]);
-                z_face[y % (cb_sector_h)][x % (cb_sector_w)] = cmap_array[y][x];
-        
-        cb_images.append(Image.fromarray(z_face, mode='RGB'));
-        
-        #Extract +Z (top face)
-        z_face = np.empty((cb_sector_h, cb_sector_w, 3), dtype=np.uint8);
-        for y in range(2 * (cb_sector_h), 3 * (cb_sector_h)):
-            for x in range(1 * (cb_sector_w), 2 * (cb_sector_w)):
-                #print(cmap_array[y][x]);
-                z_face[y % (cb_sector_h)][x % (cb_sector_w)] = cmap_array[y][x];
-                
-        cb_images.append(Image.fromarray(z_face, mode='RGB'));
-                
-        #Extract -Z (bottom face)
-        z_face = np.empty((cb_sector_h, cb_sector_w, 3), dtype=np.uint8);
-        for y in range(0, 1 * (cb_sector_h)):
-            for x in range(1 * (cb_sector_w), 2 * (cb_sector_w)):
                 #print(cmap_array[y][x]);
                 z_face[y % (cb_sector_h)][x % (cb_sector_w)] = cmap_array[y][x];
         

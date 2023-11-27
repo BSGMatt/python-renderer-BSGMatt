@@ -16,7 +16,7 @@ if __name__ == '__main__':
     if (num_args < 3):
         print("Correct usage: spheremaptest.py [mesh_path] [texture_path]");
     
-    screen = Screen(400,400)
+    screen = Screen(500,500)
 
     camera = PerspectiveCamera(1.0, -1.0, -1.0, 1.0, -1.0, -10)
     camera.transform.set_position(0, 2.5, 0)
@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     mesh = Mesh.from_stl(sys.argv[1], np.array([1.0, 0.0, 1.0]),\
         np.array([1.0, 1.0, 1.0]),0.05,1.0,1.0,10)
-    mesh.transform.set_rotation(0, 45, 0)
+    mesh.transform.set_rotation(45, 45, 45)
     
     mesh.sphere_uvs()
     mesh.load_texture(TEX_MODE_CUBEMAP, sys.argv[2]);
