@@ -17,13 +17,13 @@ if __name__ == '__main__':
         print("Correct usage: cubemaptest.py [mesh_path] [texture_path] [0 for reflect, 1 for direct]");
         sys.exit();
     
-    screen = Screen(500,500)
+    screen = Screen(400,400)
 
     camera = PerspectiveCamera(1.0, -1.0, -1.0, 1.0, -1.0, -10)
     camera.transform.set_position(0, 2.5, 0)
 
 
-    mesh = Mesh.from_stl(sys.argv[1], np.array([0.8, 0.8, 0.8]),\
+    mesh = Mesh.from_stl(sys.argv[1], np.array([1.0, 1.0, 1.0]),\
         np.array([1.0, 1.0, 1.0]),0.2,1.0,1.0,100)
     mesh.transform.set_rotation(0, 0, 0)
     
@@ -43,6 +43,10 @@ if __name__ == '__main__':
     light.transform.set_position(0, 5, 5)
     
     renderer = Renderer(screen, camera, [mesh], light)
+    
+    #FOV Stats: fovX = 2*atan[ (right-left)/(2*near) ].
+    FOV_H = np.degrees(2 * np.arctan((camera.right - camera.left)/(2*camera.near)))
+    print(f"FOV_H: {FOV_H}");
     
     renderer.render("cubemap",[80,80,80], [0.5, 0.5, 0.5])
 

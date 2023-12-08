@@ -10,6 +10,8 @@ class Screen:
     height = 100;
 
     screen_matrix = None;
+    
+    image_buffer = None;
 
     window = None;
 
@@ -35,7 +37,8 @@ class Screen:
         buffer = np.fliplr(buffer);
         buffer = np.rot90(buffer);
         
-        print(type(buffer[0][0]));
+        #Save the rendered image for future use.
+        self.image_buffer = buffer;
 
         pg.pixelcopy.array_to_surface(self.window, buffer);
 

@@ -23,6 +23,6 @@ if __name__ == '__main__':
     light.transform.set_position(0, 5, 5)
 
     renderer = Renderer(screen, camera, [mesh1], light)
-    renderer.render("texture",[80,80,80], [0.2, 0.2, 0.2])
+    renderer.render("flat",[80,80,80], [0.2, 0.2, 0.2])
 
     screen.show()

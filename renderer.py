@@ -4,6 +4,7 @@ from camera import Camera
 from light import PointLight
 import numpy as np;
 from texture import *
+import sys
 
 class Renderer:
 
@@ -30,8 +31,15 @@ class Renderer:
                        
             A = mesh.ka * np.array(ambient_light);
             mesh_pos = mesh.transform.position();
+            
+            progress = 0;
+            max_progress = len(mesh.faces);
                     
             for t in mesh.faces:
+                
+                sys.stdout.write(f"\rRendering: {progress}/{max_progress}")
+                sys.stdout.flush()
+                progress += 1;
                 
                 normal = mesh.transform.apply_to_normal(mesh.find_normal(t).as_numpy_array());
                 #normal = normal / np.linalg.norm(normal); #Ensure face normal is normalized after the thing. 
@@ -114,9 +122,17 @@ class Renderer:
                 beta_d = ((verts_device_coords[0][1] - verts_device_coords[2][1]) * verts_device_coords[1][0]) + ((verts_device_coords[2][0] - verts_device_coords[0][0]) * verts_device_coords[1][1]) + (verts_device_coords[0][0]*verts_device_coords[2][1] - verts_device_coords[2][0]*verts_device_coords[0][1])
 
                 #print(f"GammaD: {gamma_d}, BetaD: {beta_d}")
+                #min_y = max(min_y, 0);
+                #min_x = max(max_x, 0);
+                #max_x = min(max_x, self.screen.width - 1);
+                #max_y = min(max_y, self.screen.height - 1);
 
                 for y in range(min_y, max_y+1):
                     for x in range(min_x, max_x+1):
+                        
+                        #Rendering progress
+                        if (x < 0 or x >= self.screen.width): continue;
+                        if (y < 0 or y >= self.screen.height): continue;
                         
                         device_pixel = self.screen.screen_to_device(np.array([x,y,1]));
                         #print(device_pixel);
@@ -213,8 +229,8 @@ class Renderer:
                                 
                                 texture_color = mesh.texture.get_color(N, V) / 255;
                                 
-                                #diffuse_color = self.overlay_color(mesh.diffuse_color, texture_color);
-                                diffuse_color = texture_color * mesh.diffuse_color;
+                                #diffuse_color = mesh.diffuse_color * texture_color;
+                                diffuse_color = self.overlay_color(texture_color, mesh.diffuse_color);
                                 
                                 I_d = (np.array(self.light.color) * self.light.intensity) / (np.linalg.norm(p_to_l) ** 2)
                                 phi_d = (mesh.kd * diffuse_color * max(0, np.dot(L, N))) / np.pi;
@@ -253,6 +269,8 @@ class Renderer:
                                 H = (L + V) / np.linalg.norm(L + V);
                                 spec = mesh.ks * (max(0, np.dot(H, N)) ** mesh.ke) * mesh.specular_color;
                                 
+                                
+                                
                                 if (mesh.texture.tex_mode == TEX_MODE_CUBEMAP_REFLECT):
                                     texture_color = mesh.texture.get_color(N, V) / 255;
                                 else:
@@ -260,9 +278,11 @@ class Renderer:
                                     S = alpha * mesh.verts[t.a].as_array() + beta * mesh.verts[t.b].as_array() + gamma * mesh.verts[t.c].as_array();
                                     S = S / np.linalg.norm(S);
                                     texture_color = mesh.texture.get_color(S) / 255;
+                                    
+                                spec = self.overlay_color(texture_color, spec);
                                 
-                                #diffuse_color = self.overlay_color(mesh.diffuse_color, texture_color);
-                                diffuse_color = texture_color * mesh.diffuse_color;
+                                diffuse_color = mesh.diffuse_color * texture_color;
+                                #diffuse_color = self.overlay_color(texture_color, mesh.diffuse_color);
                                 
                                 I_d = (np.array(self.light.color) * self.light.intensity) / (np.linalg.norm(p_to_l) ** 2)
                                 phi_d = (mesh.kd * diffuse_color * max(0, np.dot(L, N))) / np.pi;
@@ -277,18 +297,11 @@ class Renderer:
         self.screen.draw(image_buffer);
         
     #Blends to color values together. 
-    def overlay_color(self, a: np.ndarray, b: np.ndarray) -> np.ndarray:
-            
-        print(f"{a}\n");
-        print(f"{b}\n");
-            
-        ret = [];
-            
-        for i in range(3):
-            if (a[i] < 0.5):
-                ret.append(2 * a[i] * b[i]);
-            else:
-                ret.append(1 - 2*(1 - a[i])*(1 - b[i]));
-            print(ret);
-            
+    def overlay_color(self, r_color: np.ndarray, obj_color: np.ndarray) -> np.ndarray:
+        
+        #Calculate the luminance of the given color
+        Y = 0.2126 * r_color[0] + 0.7152 * r_color[1] + 0.0722 * r_color[2]; 
+        
+        ret = (Y * 0.5 * obj_color) / 2 + obj_color / 2;
+        
         return np.array(ret);

@@ -45,7 +45,9 @@ class Texture:
         return self.custom_uv(0, tex_args[0]);
     
     def custom_uv(self, imgIdx, UV):
-        px_coords = (round((UV[0] * self.images[imgIdx].width - 0.5)), round((UV[1] * self.images[imgIdx].height - 0.5)))
+        
+        px_coords = (min(self.images[imgIdx].width - 1, round((UV[0] * self.images[imgIdx].width - 0.5)))\
+            , min(self.images[imgIdx].height - 1, round((UV[1] * self.images[imgIdx].height - 0.5))))
         r, g, b = self.images[imgIdx].getpixel(px_coords);
         return np.array([r,g,b]);
     
