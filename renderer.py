@@ -34,6 +34,8 @@ class Renderer:
             
             progress = 0;
             max_progress = len(mesh.faces);
+            
+            print(f"NUM vertices: {len(mesh.verts)}");
                     
             for t in mesh.faces:
                 

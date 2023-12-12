@@ -255,7 +255,4 @@ class Texture:
         
         ret.images = cb_images;
         
-        for i in ret.images:
-            print(f'W: {i.width}, H: {i.height}');
-        
         return ret;
