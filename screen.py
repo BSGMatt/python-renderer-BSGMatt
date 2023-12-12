@@ -32,13 +32,14 @@ class Screen:
     def draw(self, buffer):
 
         self.window = pg.display.set_mode([self.width, self.height])
+        self.image_buffer = buffer;
 
         buffer = np.flipud(buffer);
         buffer = np.fliplr(buffer);
         buffer = np.rot90(buffer);
         
         #Save the rendered image for future use.
-        self.image_buffer = buffer;
+        
 
         pg.pixelcopy.array_to_surface(self.window, buffer);
 

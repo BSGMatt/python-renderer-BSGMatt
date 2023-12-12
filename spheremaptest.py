@@ -7,7 +7,9 @@ from mesh import Mesh
 from renderer import Renderer
 from light import PointLight
 from texture import *
-
+from PIL import Image
+import time
+import copy
 
 if __name__ == '__main__':
     
@@ -36,13 +38,29 @@ if __name__ == '__main__':
     
     #Optional arg for rendering mode. 
     render_mode = "spheremap"; #No additional lighting, just the texture
-    if (num_args == 4):
+    if (num_args > 3):
         val = int(sys.argv[3]);
         if (val == 1):
             render_mode = "spheremap-spec-diff"; #Texture + diffuse + ambient + specular
         if (val == 2):
             render_mode = "spheremap-spec"; #Texture + ambient + specular
     
+    #Save render result to image.
+    file_path = "renders/spheremap_render_" + time.strftime("%b_%d_%Y_%H_%M_%S.png", time.gmtime());
+    
+    if (num_args >= 4):
+        file_path = sys.argv[4];
+    
     renderer.render(render_mode,[80,80,80], [0.5, 0.5, 0.5])
-
-    screen.show()
+    
+    screen.show();
+    
+    #Flip render result to match results from window. 
+    render = renderer.screen.image_buffer.astype(np.uint8);
+    render = np.flipud(render);
+        
+    img = Image.fromarray(render);
+    img.save(file_path);
+    
+    
+    

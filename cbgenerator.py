@@ -17,9 +17,16 @@ def start():
     
     num_args = len(sys.argv);
     
-    if (num_args < 3):
-        print("Correct usage: cubemaptest.py [mesh_path] [texture_path] [0 for reflect, 1 for direct]");
+    if (num_args < 7):
+        print("Correct usage: cbgenerator.py [render_path] [top_mesh] [bottom_mesh] [left_mesh] [right_mesh] [front_mesh] [back_mesh]");
         sys.exit();
+        
+    file_path = "cbgeneratortest.png"
+    start_of_stls = 1;
+    if (num_args > 7):
+        file_path = sys.argv[2];
+        start_of_stls = 2
+        
     
     screen = Screen(CUBE_SIZE,CUBE_SIZE)
 
@@ -48,7 +55,7 @@ def start():
     mesh_positions = np.array([[0.0, -2.5, 0.0],[-2.5,0.0,0.0],[2.5,0.0,0.0],[0.0,2.5,0.0]])
     mesh_colors = np.array([[1.0, 0.0, 0.0],[0.0,1.0,0.0],[0.0,0.0,1.0],[1.0,1.0,0.0],[1.0,0.0,1.0],[0.0,1.0,1.0]])
     
-    mesh_args = sys.argv[1:];
+    mesh_args = sys.argv[start_of_stls:];
     z_rot = 0;
     
     for i in range(len(mesh_args)):
@@ -59,13 +66,18 @@ def start():
         renderer = Renderer(screen, camera, [floor, mesh], light)
     
         renderer.render("flat",[80,80,80], [0.5, 0.5, 0.5])
+        
+        render = renderer.screen.image_buffer;
+        render = np.rot90(render);
+        
         #screen.show()
-        renders.append(renderer.screen.image_buffer);
+        renders.append(render);
         
     #Test result by displaying it in the window
     screen = Screen(CUBE_SIZE * 4,CUBE_SIZE * 3)
     img_buffer = build_cubemap(renders)
     screen.draw(img_buffer)
+    img_buffer = np.flipud(img_buffer);
     screen.show();
     
     cubemap_image = Image.fromarray(img_buffer)
@@ -115,6 +127,7 @@ def build_cubemap(images: np.ndarray):
             cubemap_image[(CUBE_SIZE) + y][(CUBE_SIZE * 3) + x] = images[5][y][x];
             
     cubemap_image = np.flipud(cubemap_image);
+    
     
     return cubemap_image;
 
