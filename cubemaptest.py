@@ -58,9 +58,11 @@ if __name__ == '__main__':
 
     screen.show()
     
-    render = renderer.screen.image_buffer.astype(np.uint8);
-    render = np.flipud(render);
-        
-    img = Image.fromarray(render);
-    img.save(file_path);
+    if (file_path != "none"):
+    
+        render = renderer.screen.image_buffer.astype(np.uint8);
+        render = np.flipud(render);
+            
+        img = Image.fromarray(render);
+        img.save(file_path);
     

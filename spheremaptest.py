@@ -16,7 +16,7 @@ if __name__ == '__main__':
     num_args = len(sys.argv);
     
     if (num_args < 3):
-        print("Correct usage: spheremaptest.py [mesh_path] [texture_path]");
+        print("Correct usage: spheremaptest.py [mesh_path] [texture_path] [render_mode]");
     
     screen = Screen(500,500)
 
@@ -55,12 +55,14 @@ if __name__ == '__main__':
     
     screen.show();
     
-    #Flip render result to match results from window. 
-    render = renderer.screen.image_buffer.astype(np.uint8);
-    render = np.flipud(render);
-        
-    img = Image.fromarray(render);
-    img.save(file_path);
+    if (file_path != "none"):
+    
+        #Flip render result to match results from window. 
+        render = renderer.screen.image_buffer.astype(np.uint8);
+        render = np.flipud(render);
+            
+        img = Image.fromarray(render);
+        img.save(file_path);
     
     
     
